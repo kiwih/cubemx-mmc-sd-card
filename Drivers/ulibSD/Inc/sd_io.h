@@ -12,51 +12,19 @@
 /*****************************************************************************/
 /* Configurations                                                            */
 /*****************************************************************************/
-//#define _M_IX86           // For use with x86 architecture
 #define SD_IO_WRITE
 //#define SD_IO_WRITE_WAIT_BLOCKER
 #define SD_IO_WRITE_TIMEOUT_WAIT 250
 
+#define SD_DEFAULT_TIMEOUT 250
+
 //#define SD_IO_DBG_COUNT
 /*****************************************************************************/
 
-#if defined(_M_IX86)
+// For use with uControllers
 
-#include <stdio.h>
-#include "integer.h"
-
-/* Results of SD functions */
-typedef enum {
-    SD_OK = 0,      /* 0: Function succeeded    */
-    SD_NOINIT       /* 1: SD not initialized    */
-    SD_ERROR,       /* 2: Disk error            */
-    SD_PARERR,      /* 3: Invalid parameter     */
-    SD_BUSY,        /* 4: Programming busy      */
-    SD_REJECT       /* 5: Reject data           */
-} SDRESULTS;
-
-#ifdef SD_IO_DBG_COUNT
-typedef struct _DBG_COUNT {
-    WORD read;
-    WORD write;
-} DBG_COUNT;
-#endif
-
-/* SD device object */
-typedef struct _SD_DEV {
-    BOOL mount;
-    BYTE cardtype;
-    char fn[20]; /* dd if=/dev/zero of=sim_sd.raw bs=1k count=0 seek=8192 */
-    FILE *fp;
-    DWORD last_sector;
-#ifdef SD_IO_DBG_COUNT
-    DBG_COUNT debug;
-#endif
-} SD_DEV;
-
-#else // For use with uControllers
-
-#include "spi_io.h" /* Provide the low-level functions */
+#include "stm32f3xx_hal.h" /* Provide the low-level functions */
+#include <stdint.h>
 
 /* Definitions of SD commands */
 #define CMD0    (0x40+0)        /* GO_IDLE_STATE            */
@@ -96,23 +64,25 @@ typedef enum {
 
 #ifdef SD_IO_DBG_COUNT
 typedef struct _DBG_COUNT {
-    WORD read;
-    WORD write;
+    uint16_t read;
+    uint16_t write;
 } DBG_COUNT;
 #endif
 
 
 /* SD device object */
 typedef struct _SD_DEV {
-    BOOL mount;
-    BYTE cardtype;
-    DWORD last_sector;
+    uint8_t mount;
+    uint8_t cardtype;
+    uint32_t last_sector;
 #ifdef SD_IO_DBG_COUNT
     DBG_COUNT debug;
 #endif
 } SD_DEV;
 
-#endif
+/* Boolean type */
+typedef enum { FALSE = 0, TRUE } BOOLEAN;
+typedef enum { LOW = 0, HIGH } THROTTLE;
 
 /*******************************************************************************
  * Public Methods - Direct work with SD card                                   *
@@ -132,7 +102,7 @@ SDRESULTS SD_Init (SD_DEV *dev);
     \param cnt Byte count (1..512).
     \return If all goes well returns SD_OK.
  */
-SDRESULTS SD_Read (SD_DEV *dev, void *dat, DWORD sector, WORD ofs, WORD cnt);
+SDRESULTS SD_Read (SD_DEV *dev, void *dat, uint32_t sector, uint16_t ofs, uint16_t cnt);
 
 /**
     \brief Write a single block.
@@ -140,7 +110,7 @@ SDRESULTS SD_Read (SD_DEV *dev, void *dat, DWORD sector, WORD ofs, WORD cnt);
     \param sector Sector number to write (internally is converted to byte address).
     \return If all goes well returns SD_OK.
  */
-SDRESULTS SD_Write (SD_DEV *dev, void *dat, DWORD sector);
+SDRESULTS SD_Write (SD_DEV *dev, void *dat, uint32_t sector);
 
 /**
     \brief Allows know status of SD card.
@@ -148,7 +118,7 @@ SDRESULTS SD_Write (SD_DEV *dev, void *dat, DWORD sector);
 */
 SDRESULTS SD_Status (SD_DEV *dev);
 
-#endif
+#endif //_SD_IO_H_
 
 // «sd_io.h» is part of:
 /*----------------------------------------------------------------------------/
