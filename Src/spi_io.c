@@ -7,18 +7,27 @@
  */
 
 #include "spi_io.h"
+#include "stm32f3xx_hal.h"
+
+extern SPI_HandleTypeDef hspi2;
 
 /**
     \brief Initialize SPI hardware
  */
-void SPI_Init (void);
+void SPI_Init (void) {
+    //MX_SPI2_Init();
+    //don't need to do anything here, SPI is already initialised
+}
 
 /**
     \brief Read/Write a single byte.
     \param d Byte to send.
     \return Byte that arrived.
  */
-BYTE SPI_RW (BYTE d);
+BYTE SPI_RW (BYTE d) {
+    uint8_t rxDat;
+    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)&d, &rxDat, 1, 
+}
 
 /**
     \brief Flush of SPI buffer.
