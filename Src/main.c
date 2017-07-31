@@ -167,17 +167,40 @@ int main(void)
       myprintf("f_open error (%i)\r\n");
       while(1);
     }
-    myprintf("I was able to open the file!\r\n");
+    myprintf("I was able to open 'test.txt' for reading!\r\n");
 
     BYTE readBuf[30];
     UINT bytesRead; 
 
     fres = f_read(&fil, readBuf, 30, &bytesRead);
     if(fres == FR_OK) {
+      readBuf[bytesRead] = '\0'; //f_read doesn't necessarily append the EOF/null char
       myprintf("Read %i bytes from 'test.txt' contents: %s\r\n", bytesRead, readBuf);
     } else {
-      myprintf("Couldn't read any bytes (%i)\r\n", fres);
+      myprintf("f_read error (%i)\r\n", fres);
     }
+    
+    //Close file, don't forget this!
+    f_close(&fil);
+
+    fres = f_open(&fil, "write.txt", FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+    if(fres == FR_OK) {
+      myprintf("I was able to open 'write.txt' for writing\r\n");
+    } else {
+      myprintf("f_open error (%i)\r\n", fres);
+    }
+
+    strncpy(readBuf, "a new file is made!", 19);
+
+    fres = f_write(&fil, readBuf, 19, &bytesRead);
+    if(fres == FR_OK) {
+      myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesRead);
+    } else {
+      myprintf("f_write error (%i)\r\n");
+    }
+
+    //Close file, don't forget this!
+    f_close(&fil);
     
     // //If we put more than 0 characters (everything OK)
     // if (f_puts("First string in my file\n", &fil) > 0) {
@@ -189,9 +212,7 @@ int main(void)
     
     //Close file, don't forget this!
     f_close(&fil);
-
-    f_mount(0, "", 1);
-   
+    
     while(1);
   }
   /* USER CODE END 3 */
