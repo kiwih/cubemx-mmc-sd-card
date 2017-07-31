@@ -143,52 +143,55 @@ int main(void)
 
     //Mount drive
     fres = f_mount(&FatFs, "", 1);
-    if (fres == FR_OK) {
+    if (fres != FR_OK) {
+      myprintf("f_mount error (%i)\r\n", fres);
+      while(1);
+    }
+
+    DWORD free_clusters, free_sectors, total_sectors;
+
+    fres = f_getfree("", &free_clusters, &FatFs);
+    if (fres != FR_OK) {
+      myprintf("f_getfree error (%i)\r\n", fres);
+      while(1);
+    }
  
-        myprintf("SD card mounted OK\r\n");
+    total_sectors = (FatFs.n_fatent - 2) * FatFs.csize;
+    free_sectors = free_clusters * FatFs.csize;
+
+    myprintf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
         
-        //Try to open file
-        fres = f_open(&fil, "test.txt", FA_READ);
-        if (fres == FR_OK) {
-            myprintf("I was able to open the file!\r\n");
+    //Try to open file
+    fres = f_open(&fil, "test.txt", FA_READ);
+    if (fres != FR_OK) {
+      myprintf("f_open error (%i)\r\n");
+      while(1);
+    }
+    myprintf("I was able to open the file!\r\n");
 
-            BYTE readBuf[30];
-            UINT bytesRead; 
+    BYTE readBuf[30];
+    UINT bytesRead; 
 
-            fres = f_read(&fil, readBuf, 30, &bytesRead);
-            if(fres == FR_OK) {
-              myprintf("Read %i bytes from 'test.txt' contents: %s\r\n", bytesRead, readBuf);
-            } else {
-              myprintf("Couldn't read any bytes (%i)\r\n", fres);
-            }
-            
-            // //If we put more than 0 characters (everything OK)
-            // if (f_puts("First string in my file\n", &fil) > 0) {
-                
-                
-            //     //Turn on both leds
-            //     TM_DISCO_LedOn(LED_GREEN | LED_RED);
-            // }
-            
-            //Close file, don't forget this!
-            f_close(&fil);
-        } else {
-          myprintf("Couldn't open file (%i)\r\n", fres);
-        }
-
-        // if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
-        //     //Data for drive size are valid
-        //     myprintf("SD card has %i bytes total space, %i bytes free\r\n", total, free);
-        // } else {
-        //     myprintf()
-        // }
-        
-        //Unmount drive, don't forget this!
-        f_mount(0, "", 1);
+    fres = f_read(&fil, readBuf, 30, &bytesRead);
+    if(fres == FR_OK) {
+      myprintf("Read %i bytes from 'test.txt' contents: %s\r\n", bytesRead, readBuf);
     } else {
-        myprintf("SD card did not mount OK (%i)\r\n", fres);
+      myprintf("Couldn't read any bytes (%i)\r\n", fres);
     }
     
+    // //If we put more than 0 characters (everything OK)
+    // if (f_puts("First string in my file\n", &fil) > 0) {
+        
+        
+    //     //Turn on both leds
+    //     TM_DISCO_LedOn(LED_GREEN | LED_RED);
+    // }
+    
+    //Close file, don't forget this!
+    f_close(&fil);
+
+    f_mount(0, "", 1);
+   
     while(1);
   }
   /* USER CODE END 3 */
