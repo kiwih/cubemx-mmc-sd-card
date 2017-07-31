@@ -80,6 +80,10 @@ typedef struct _SD_DEV {
 #endif
 } SD_DEV;
 
+/* Boolean type */
+typedef enum { FALSE = 0, TRUE } BOOLEAN;
+typedef enum { LOW = 0, HIGH } THROTTLE;
+
 /*******************************************************************************
  * Public Methods - Direct work with SD card                                   *
  ******************************************************************************/

@@ -3,41 +3,52 @@
   * File Name          : main.c
   * Description        : Main program body
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
+  * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
   * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * Copyright (c) 2017 STMicroelectronics International N.V. 
+  * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
+  * Redistribution and use in source and binary forms, with or without 
+  * modification, are permitted, provided that the following conditions are met:
   *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * 1. Redistribution of source code must retain the above copyright notice, 
+  *    this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  *    this list of conditions and the following disclaimer in the documentation
+  *    and/or other materials provided with the distribution.
+  * 3. Neither the name of STMicroelectronics nor the names of other 
+  *    contributors to this software may be used to endorse or promote products 
+  *    derived from this software without specific written permission.
+  * 4. This software, including modifications and/or derivative works of this 
+  *    software, must execute solely and exclusively on microcontroller or
+  *    microprocessor devices manufactured by or for STMicroelectronics.
+  * 5. Redistribution and use of this software other than as permitted under 
+  *    this license is void and will automatically terminate your rights under 
+  *    this license. 
+  *
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
+#include "fatfs.h"
 
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -59,8 +70,7 @@ UART_HandleTypeDef huart1;
 /* Private variables ---------------------------------------------------------*/
 char buffer[100];
 
-SD_DEV sdDev[1];          // Create device descriptor
-uint8_t sdBuffer[512];    // SD buffer data
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -72,7 +82,7 @@ static void MX_SPI1_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void myprintf(UART_HandleTypeDef* huart, const char *fmt, ...);
+void myprintf(const char *fmt, ...);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -83,7 +93,12 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  //Fatfs object
+  FATFS FatFs;
+  //File object
+  FIL fil;
+  //Free and total space
+  uint32_t sdTotalSpace, sdFreeSpace;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -107,10 +122,12 @@ int main(void)
   MX_RTC_Init();
   MX_USART1_UART_Init();
   MX_SPI1_Init();
-  SPI_RW(0xFF); //get the first crap out of the way
+  MX_FATFS_Init();
 
   /* USER CODE BEGIN 2 */
   int tickCount = 0;
+  myprintf("Mary had a little lamb --\r\nI ate it with mint sauce.\r\n\r\n", tickCount);
+  HAL_Delay(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -122,11 +139,50 @@ int main(void)
   /* USER CODE BEGIN 3 */
     
     //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-    myprintf(&huart1, "Tick %i!\r\n", tickCount);
+    myprintf("Tick %i!\r\n", tickCount);
     tickCount++;
 
-    SPI_Timer_On(1000);
-    while(SPI_Timer_Status()==TRUE);
+    //Mount drive
+    if (f_mount(&FatFs, "", 1) == FR_OK) {
+ 
+        myprintf("SD card mounted OK\r\n");
+        
+        //Try to open file
+        FRESULT res = f_open(&fil, "test.txt", FA_READ);
+        if (res == FR_OK) {
+            myprintf("I was able to open the file!\r\n");
+            
+            // //If we put more than 0 characters (everything OK)
+            // if (f_puts("First string in my file\n", &fil) > 0) {
+                
+                
+            //     //Turn on both leds
+            //     TM_DISCO_LedOn(LED_GREEN | LED_RED);
+            // }
+            
+            //Close file, don't forget this!
+            f_close(&fil);
+        } else {
+          myprintf("Couldn't open file (%i)\r\n", res);
+        }
+
+        // if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
+        //     //Data for drive size are valid
+        //     myprintf("SD card has %i bytes total space, %i bytes free\r\n", total, free);
+        // } else {
+        //     myprintf()
+        // }
+        
+        //Unmount drive, don't forget this!
+        f_mount(0, "", 1);
+    } else {
+        myprintf("SD card did not mount OK\r\n");
+    }
+    
+    while(1);
+
+    // SPI_Timer_On(1000);
+    // while(SPI_Timer_Status()==TRUE);
 
     // uint8_t txDat = 0xFF;
     // HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_RESET);
@@ -136,45 +192,50 @@ int main(void)
     // }
     
     // HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_SET);
-    SDRESULTS res;
-    if(SD_Init(sdDev)==SD_OK) {
-      myprintf(&huart1, "SD card init ok!\r\n");
+    // SDRESULTS res;
+    // if(SD_Init(sdDev)==SD_OK) {
+    //   myprintf(&huart1, "SD card init ok!\r\n");
     
-      // You can read the sd card. For example you can read from the second
-      // sector the set of bytes between [04..20]:
-      // - Second sector is 1
-      // - Offset is 4
-      // - Bytes to count is 16 (20 minus 4)
+    //   // You can read the sd card. For example you can read from the second
+    //   // sector the set of bytes between [04..20]:
+    //   // - Second sector is 1
+    //   // - Offset is 4
+    //   // - Bytes to count is 16 (20 minus 4)
 
-      res = SD_Read(sdDev, (void*)sdBuffer, 1, 0, 512);
-      if(res==SD_OK)
-      {
-        myprintf(&huart1, "sd card read success!\r\n");
-        for(int i=0; i<512; i++) {
-          if(i % 8 == 0) {
-            myprintf(&huart1, "\r\n");
-          }
-          myprintf(&huart1, "0x%.2X ", sdBuffer[i]);
-        }
-        myprintf(&huart1, "\r\n");
+    //   res = SD_Read(sdDev, (void*)sdBuffer, 1, 0, 512);
+    //   if(res==SD_OK)
+    //   {
+    //     myprintf(&huart1, "sd card read success!\r\n");
+    //     for(int i=0; i<512; i++) {
+    //       if(i % 8 == 0) {
+    //         myprintf(&huart1, "\r\n");
+    //       }
+    //       myprintf(&huart1, "0x%.2X ", sdBuffer[i]);
+    //     }
+    //     myprintf(&huart1, "\r\n");
 
-        // sdBuffer[0] = 0x00;
-        // res = SD_Write(sdDev, (void*)sdBuffer, 1);
-        // if(res==SD_OK)
-        // {
-        //   myprintf(&huart1, "sd card write success!\r\n");
-        // } else {
-        //   myprintf(&huart1, "sd card write failed!\r\n");
-        // }
-      } else {
-        myprintf(&huart1, "sd card read failed! :(\r\n");
-      }
+    //     // sdBuffer[0] = 0x00;
+    //     // res = SD_Write(sdDev, (void*)sdBuffer, 1);
+    //     // if(res==SD_OK)
+    //     // {
+    //     //   myprintf(&huart1, "sd card write success!\r\n");
+    //     // } else {
+    //     //   myprintf(&huart1, "sd card write failed!\r\n");
+    //     // }
+    //   } else {
+    //     myprintf(&huart1, "sd card read failed! :(\r\n");
+    //   }
     
-    } else {
-      myprintf(&huart1, "sd card init not ok :(\r\n");
-    }
+    // } else {
+    //   myprintf(&huart1, "sd card init not ok :(\r\n");
+    // }
 
-
+    //  if(f_mount(&FatFs, "", 1) == FR_OK)
+    //     {
+    //         print("SD mounted.");
+    //         /* Open file */
+    //         fr = f_open(&fil, APP_FILENAME, FA_READ);
+    //         if(fr == FR_OK)
 
     //while(1);
   }
@@ -353,14 +414,14 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void myprintf(UART_HandleTypeDef* huart, const char *fmt, ...) {
+void myprintf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vsnprintf(buffer, sizeof(buffer), fmt, args);
   va_end(args);
 
   int len = strlen(buffer);
-  HAL_UART_Transmit(huart, (uint8_t*)buffer, len, 1000);
+  HAL_UART_Transmit(&huart1, (uint8_t*)buffer, len, 1000);
 
 }
 /* USER CODE END 4 */

@@ -136,6 +136,27 @@ void __SD_Speed_Transfer(BYTE throttle) {
     else SPI_Freq_Low();
 }
 
+// void UpdateCrc(BYTE data, BYTE* crc) {
+//     for (int b = 0; b < 8; b++)
+//     {
+//         BYTE bit = *crc & 0x40;
+
+//         if ((data & 0x80UL) != 0)
+//         {
+//             bit ^= 0x40;
+//         }
+
+//         data <<= 1;
+//         *crc <<= 1;
+
+//         if (bit != 0)
+//         {
+//             *crc ^= 0x09;
+//         }
+//     }
+//     return ;
+// }
+
 BYTE __SD_Send_Cmd(BYTE cmd, DWORD arg)
 {
     BYTE crc, res;
@@ -151,6 +172,15 @@ BYTE __SD_Send_Cmd(BYTE cmd, DWORD arg)
     SPI_RW(0xFF);
     __SD_Assert();
     SPI_RW(0xFF);
+
+    //compute crc
+    // crc = 0x00;
+    // UpdateCrc(cmd, &crc);
+    // UpdateCrc((BYTE)(arg >> 24), &crc);
+    // UpdateCrc((BYTE)(arg >> 16), &crc);
+    // UpdateCrc((BYTE)(arg >> 8 ), &crc);
+    // UpdateCrc((BYTE)(arg >> 0 ), &crc);
+    // crc &= 0x7F;
 
     // Send complete command set
     SPI_RW(cmd);                        // Start and command index
@@ -231,6 +261,7 @@ DWORD __SD_Sectors (SD_DEV *dev)
         SPI_Release();
         if(dev->cardtype & SDCT_SD1)
         {
+            myprintf("sdct_sd1\r\n");
             ss = csd[0];
             // READ_BL_LEN[83:80]: max. read data block length
             READ_BL_LEN = (csd[5] & 0x0F);
@@ -247,6 +278,7 @@ DWORD __SD_Sectors (SD_DEV *dev)
         }
         else if(dev->cardtype & SDCT_SD2)
         {
+            myprintf("sdct_sd2\r\n");
             // C_SIZE [69:48]
             C_SIZE = (csd[7] & 0x3F);
             C_SIZE <<= 8;
@@ -255,7 +287,11 @@ DWORD __SD_Sectors (SD_DEV *dev)
             C_SIZE |= (csd[9] & 0xFF);
             // C_SIZE_MULT [--]. don't exits
             C_SIZE_MULT = 0;
+
+            //HP: for SDHC cards, multiply this number by 1024 and return
+            return C_SIZE * 1024;
         }
+        
         ss = (C_SIZE + 1);
         ss *= __SD_Power_Of_Two(C_SIZE_MULT + 2);
         ss *= __SD_Power_Of_Two(READ_BL_LEN);
@@ -344,6 +380,8 @@ SDRESULTS SD_Init(SD_DEV *dev)
         dev->cardtype = ct;
         dev->mount = TRUE;
         dev->last_sector = __SD_Sectors(dev) - 1;
+        myprintf("cardtype: %i\r\n", dev->cardtype);
+        myprintf("#sectors: %i\r\n", dev->last_sector);
 #ifdef SD_IO_DBG_COUNT
         dev->debug.read = 0;
         dev->debug.write = 0;
@@ -362,7 +400,7 @@ SDRESULTS SD_Read(SD_DEV *dev, void *dat, DWORD sector, WORD ofs, WORD cnt)
     res = SD_ERROR;
     if ((sector > dev->last_sector)||(cnt == 0)) return(SD_PARERR);
     // Convert sector number to byte address (sector * SD_BLK_SIZE)
-    if (__SD_Send_Cmd(CMD17, sector * SD_BLK_SIZE) == 0) {
+    if (__SD_Send_Cmd(CMD17, sector /** SD_BLK_SIZE*/) == 0) {
         SPI_Timer_On(100);  // Wait for data packet (timeout of 100ms)
         do {
             tkn = SPI_RW(0xFF);
@@ -388,7 +426,9 @@ SDRESULTS SD_Read(SD_DEV *dev, void *dat, DWORD sector, WORD ofs, WORD cnt)
                 SPI_RW(0xFF); 
             } while (--remaining);
             res = SD_OK;
-        }
+        } 
+    } else {
+        myprintf("not ok with CMD17\r\n");
     }
     SPI_Release();
 #ifdef SD_IO_DBG_COUNT
