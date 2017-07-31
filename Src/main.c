@@ -55,8 +55,6 @@
 #include <string.h>
 #include <stdarg.h> //for va_list var arg functions
 
-#include "sd_io.h"
-
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -128,6 +126,7 @@ int main(void)
   int tickCount = 0;
   myprintf("Mary had a little lamb --\r\nI ate it with mint sauce.\r\n\r\n", tickCount);
   HAL_Delay(1000);
+  FRESULT fres;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -143,13 +142,14 @@ int main(void)
     tickCount++;
 
     //Mount drive
-    if (f_mount(&FatFs, "", 1) == FR_OK) {
+    fres = f_mount(&FatFs, "", 1);
+    if (fres == FR_OK) {
  
         myprintf("SD card mounted OK\r\n");
         
         //Try to open file
-        FRESULT res = f_open(&fil, "test.txt", FA_READ);
-        if (res == FR_OK) {
+        fres = f_open(&fil, "test.txt", FA_READ);
+        if (fres == FR_OK) {
             myprintf("I was able to open the file!\r\n");
             
             // //If we put more than 0 characters (everything OK)
@@ -163,7 +163,7 @@ int main(void)
             //Close file, don't forget this!
             f_close(&fil);
         } else {
-          myprintf("Couldn't open file (%i)\r\n", res);
+          myprintf("Couldn't open file (%i)\r\n", fres);
         }
 
         // if (TM_FATFS_DriveSize(&total, &free) == FR_OK) {
@@ -176,68 +176,10 @@ int main(void)
         //Unmount drive, don't forget this!
         f_mount(0, "", 1);
     } else {
-        myprintf("SD card did not mount OK\r\n");
+        myprintf("SD card did not mount OK (%i)\r\n", fres);
     }
     
     while(1);
-
-    // SPI_Timer_On(1000);
-    // while(SPI_Timer_Status()==TRUE);
-
-    // uint8_t txDat = 0xFF;
-    // HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_RESET);
-    //SPI_Freq_Low();
-    // for(uint8_t cnt = 0; cnt < 10; cnt++) {
-    //   SPI_RW(0xFF);
-    // }
-    
-    // HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_SET);
-    // SDRESULTS res;
-    // if(SD_Init(sdDev)==SD_OK) {
-    //   myprintf(&huart1, "SD card init ok!\r\n");
-    
-    //   // You can read the sd card. For example you can read from the second
-    //   // sector the set of bytes between [04..20]:
-    //   // - Second sector is 1
-    //   // - Offset is 4
-    //   // - Bytes to count is 16 (20 minus 4)
-
-    //   res = SD_Read(sdDev, (void*)sdBuffer, 1, 0, 512);
-    //   if(res==SD_OK)
-    //   {
-    //     myprintf(&huart1, "sd card read success!\r\n");
-    //     for(int i=0; i<512; i++) {
-    //       if(i % 8 == 0) {
-    //         myprintf(&huart1, "\r\n");
-    //       }
-    //       myprintf(&huart1, "0x%.2X ", sdBuffer[i]);
-    //     }
-    //     myprintf(&huart1, "\r\n");
-
-    //     // sdBuffer[0] = 0x00;
-    //     // res = SD_Write(sdDev, (void*)sdBuffer, 1);
-    //     // if(res==SD_OK)
-    //     // {
-    //     //   myprintf(&huart1, "sd card write success!\r\n");
-    //     // } else {
-    //     //   myprintf(&huart1, "sd card write failed!\r\n");
-    //     // }
-    //   } else {
-    //     myprintf(&huart1, "sd card read failed! :(\r\n");
-    //   }
-    
-    // } else {
-    //   myprintf(&huart1, "sd card init not ok :(\r\n");
-    // }
-
-    //  if(f_mount(&FatFs, "", 1) == FR_OK)
-    //     {
-    //         print("SD mounted.");
-    //         /* Open file */
-    //         fr = f_open(&fil, APP_FILENAME, FA_READ);
-    //         if(fr == FR_OK)
-
-    //while(1);
   }
   /* USER CODE END 3 */
 

@@ -2339,12 +2339,13 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 		} while (!LD2PT(vol) && fmt && ++i < 4);
 	}
 	if (fmt == 3) return FR_DISK_ERR;		/* An error occured in the disk I/O layer */
-	
 	if (fmt) return FR_NO_FILESYSTEM;		/* No FAT volume is found */
+
 	/* An FAT volume is found. Following code initializes the file system object */
 
 	if (LD_WORD(fs->win.d8 + BPB_BytsPerSec) != SS(fs))	/* (BPB_BytsPerSec must be equal to the physical sector size) */
 		return FR_NO_FILESYSTEM;
+
 	fasize = LD_WORD(fs->win.d8 + BPB_FATSz16);			/* Number of sectors per FAT */
 	if (!fasize) fasize = LD_DWORD(fs->win.d8 + BPB_FATSz32);
 	fs->fsize = fasize;
@@ -2353,6 +2354,7 @@ FRESULT find_volume (	/* FR_OK(0): successful, !=0: any error occurred */
 	if (fs->n_fats != 1 && fs->n_fats != 2)				/* (Must be 1 or 2) */
 		return FR_NO_FILESYSTEM;
 	fasize *= fs->n_fats;								/* Number of sectors for FAT area */
+
 	fs->csize = fs->win.d8[BPB_SecPerClus];				/* Number of sectors per cluster */
 	if (!fs->csize || (fs->csize & (fs->csize - 1)))	/* (Must be power of 2) */
 		return FR_NO_FILESYSTEM;
@@ -2546,11 +2548,6 @@ FRESULT f_open (
 	if (res == FR_OK) {
 		INIT_BUF(dj);
 		res = follow_path(&dj, path);	/* Follow the file path */
-		if(res == FR_OK) {
-			myprintf("found\r\n");
-		} else {
-			myprintf("not found\r\n");
-		}
 		dir = dj.dir;
 #if !_FS_READONLY	/* R/W configuration */
 		if (res == FR_OK) {
