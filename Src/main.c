@@ -151,6 +151,16 @@ int main(void)
         fres = f_open(&fil, "test.txt", FA_READ);
         if (fres == FR_OK) {
             myprintf("I was able to open the file!\r\n");
+
+            BYTE readBuf[30];
+            UINT bytesRead; 
+
+            fres = f_read(&fil, readBuf, 30, &bytesRead);
+            if(fres == FR_OK) {
+              myprintf("Read %i bytes from 'test.txt' contents: %s\r\n", bytesRead, readBuf);
+            } else {
+              myprintf("Couldn't read any bytes (%i)\r\n", fres);
+            }
             
             // //If we put more than 0 characters (everything OK)
             // if (f_puts("First string in my file\n", &fil) > 0) {

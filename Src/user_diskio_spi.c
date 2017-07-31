@@ -13,36 +13,11 @@
 /-------------------------------------------------------------------------*/
 
 #include "stm32f3xx_hal.h" /* Provide the low-level HAL functions */
-#include "integer.h" //from FatFs middleware library
-#include "diskio.h" //from FatFs middleware library
-#include "ff_gen_drv.h" //from FatFs middleware library
+#include "user_diskio_spi.h"
 
 extern SPI_HandleTypeDef hspi1;
 
 /* Function prototypes */
-
-DSTATUS USER_initialize (BYTE pdrv);
-DSTATUS USER_status (BYTE pdrv);
-DRESULT USER_read (BYTE pdrv, BYTE *buff, DWORD sector, UINT count);
-#if _USE_WRITE == 1
-  DRESULT USER_write (BYTE pdrv, const BYTE *buff, DWORD sector, UINT count);  
-#endif /* _USE_WRITE == 1 */
-#if _USE_IOCTL == 1
-  DRESULT USER_ioctl (BYTE pdrv, BYTE cmd, void *buff);
-#endif /* _USE_IOCTL == 1 */
-
-Diskio_drvTypeDef  spi_USER_Driver =
-{
-  USER_initialize,
-  USER_status,
-  USER_read, 
-#if  _USE_WRITE
-  USER_write,
-#endif  /* _USE_WRITE == 1 */  
-#if  _USE_IOCTL == 1
-  USER_ioctl,
-#endif /* _USE_IOCTL == 1 */
-};
 
 #define FCLK_SLOW() { hspi1.Instance->I2SPR = 256; }	/* Set SCLK = slow */
 #define FCLK_FAST() { hspi1.Instance->I2SPR = 16; }	/* Set SCLK = fast */
@@ -322,19 +297,17 @@ BYTE send_cmd (		/* Return value: R1 resp (bit7==1:Failed to send) */
 /* Initialize disk drive                                                 */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS USER_initialize (
+inline DSTATUS USER_SPI_initialize (
 	BYTE drv		/* Physical drive number (0) */
 )
 {
 	BYTE n, cmd, ty, ocr[4];
 
-	myprintf("trying to init\r\n");
 	if (drv != 0) return STA_NOINIT;		/* Supports only drive 0 */
 	//assume SPI already init init_spi();	/* Initialize SPI */
 
 	if (Stat & STA_NODISK) return Stat;	/* Is card existing in the soket? */
 
-	myprintf("initial tests passed\r\n");
 	FCLK_SLOW();
 	for (n = 10; n; n--) xchg_spi(0xFF);	/* Send 80 dummy clocks */
 
@@ -360,18 +333,14 @@ DSTATUS USER_initialize (
 			if (!SPI_Timer_Status() || send_cmd(CMD16, 512) != 0)	/* Set block length: 512 */
 				ty = 0;
 		}
-	} else {
-		myprintf("derp\r\n");
-	}
+	} 
 	CardType = ty;	/* Card type */
 	despiselect();
 
 	if (ty) {			/* OK */
-		myprintf("int ok, ty=%i\r\n", ty);
 		FCLK_FAST();			/* Set fast clock */
 		Stat &= ~STA_NOINIT;	/* Clear STA_NOINIT flag */
 	} else {			/* Failed */
-		myprintf("init failed\r\n");
 		Stat = STA_NOINIT;
 	}
 
@@ -384,7 +353,7 @@ DSTATUS USER_initialize (
 /* Get disk status                                                       */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS USER_status (
+inline DSTATUS USER_SPI_status (
 	BYTE drv		/* Physical drive number (0) */
 )
 {
@@ -399,7 +368,7 @@ DSTATUS USER_status (
 /* Read sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 
-DRESULT USER_read (
+inline DRESULT USER_SPI_read (
 	BYTE drv,		/* Physical drive number (0) */
 	BYTE *buff,		/* Pointer to the data buffer to store read data */
 	DWORD sector,	/* Start sector number (LBA) */
@@ -438,7 +407,7 @@ DRESULT USER_read (
 /*-----------------------------------------------------------------------*/
 
 #if _USE_WRITE
-DRESULT USER_write (
+inline DRESULT USER_SPI_write (
 	BYTE drv,			/* Physical drive number (0) */
 	const BYTE *buff,	/* Ponter to the data to write */
 	DWORD sector,		/* Start sector number (LBA) */
@@ -479,7 +448,7 @@ DRESULT USER_write (
 /*-----------------------------------------------------------------------*/
 
 #if _USE_IOCTL
-DRESULT USER_ioctl (
+inline DRESULT USER_SPI_ioctl (
 	BYTE drv,		/* Physical drive number (0) */
 	BYTE cmd,		/* Control command code */
 	void *buff		/* Pointer to the conrtol data */
@@ -538,7 +507,7 @@ DRESULT USER_ioctl (
 
 	case CTRL_TRIM :	/* Erase a block of sectors (used when _USE_ERASE == 1) */
 		if (!(CardType & CT_SDC)) break;				/* Check if the card is SDC */
-		if (USER_ioctl(drv, MMC_GET_CSD, csd)) break;	/* Get CSD */
+		if (USER_SPI_ioctl(drv, MMC_GET_CSD, csd)) break;	/* Get CSD */
 		if (!(csd[0] >> 6) && !(csd[10] & 0x40)) break;	/* Check if sector erase can be applied to the card */
 		dp = buff; st = dp[0]; ed = dp[1];				/* Load sector block */
 		if (!(CardType & CT_BLOCK)) {

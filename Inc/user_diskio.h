@@ -1,7 +1,8 @@
 /**
-  ******************************************************************************
-  * @file   fatfs.c
-  * @brief  Code for fatfs applications
+ ******************************************************************************
+  * @file    user_diskio.h
+  * @brief   This file contains the common defines and functions prototypes for  
+  *          the user_diskio driver.
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -45,40 +46,29 @@
   *
   ******************************************************************************
   */
+  
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __USER_DISKIO_H
+#define __USER_DISKIO_H
 
-#include "fatfs.h"
+#ifdef __cplusplus
+ extern "C" {
+#endif 
 
-uint8_t retUSER;    /* Return value for USER */
-char USER_Path[4];  /* USER logical drive path */
+/* USER CODE BEGIN 0 */
 
-/* USER CODE BEGIN Variables */
+/* Includes ------------------------------------------------------------------*/
+/* Exported types ------------------------------------------------------------*/
+/* Exported constants --------------------------------------------------------*/
+/* Exported functions ------------------------------------------------------- */
+extern Diskio_drvTypeDef  USER_Driver;
 
-/* USER CODE END Variables */    
-
-void MX_FATFS_Init(void) 
-{
-  /*## FatFS: Link the USER driver ###########################*/
-  retUSER = FATFS_LinkDriver(&USER_Driver, USER_Path);
-
-  /* USER CODE BEGIN Init */
-  /* additional user code for init */     
-  /* USER CODE END Init */
+/* USER CODE END 0 */
+   
+#ifdef __cplusplus
 }
+#endif
 
-/**
-  * @brief  Gets Time from RTC 
-  * @param  None
-  * @retval Time in DWORD
-  */
-DWORD get_fattime(void)
-{
-  /* USER CODE BEGIN get_fattime */
-  return 0;
-  /* USER CODE END get_fattime */  
-}
-
-/* USER CODE BEGIN Application */
-     
-/* USER CODE END Application */
+#endif /* __USER_DISKIO_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
