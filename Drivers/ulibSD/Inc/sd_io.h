@@ -24,7 +24,7 @@
 // For use with uControllers
 
 #include "stm32f3xx_hal.h" /* Provide the low-level functions */
-#include <stdint.h>
+#include "integer.h"
 
 /* Definitions of SD commands */
 #define CMD0    (0x40+0)        /* GO_IDLE_STATE            */
@@ -80,10 +80,6 @@ typedef struct _SD_DEV {
 #endif
 } SD_DEV;
 
-/* Boolean type */
-typedef enum { FALSE = 0, TRUE } BOOLEAN;
-typedef enum { LOW = 0, HIGH } THROTTLE;
-
 /*******************************************************************************
  * Public Methods - Direct work with SD card                                   *
  ******************************************************************************/
@@ -102,7 +98,7 @@ SDRESULTS SD_Init (SD_DEV *dev);
     \param cnt Byte count (1..512).
     \return If all goes well returns SD_OK.
  */
-SDRESULTS SD_Read (SD_DEV *dev, void *dat, uint32_t sector, uint16_t ofs, uint16_t cnt);
+SDRESULTS SD_Read (SD_DEV *dev, void *dat, DWORD sector, WORD ofs, WORD cnt);
 
 /**
     \brief Write a single block.
@@ -110,7 +106,7 @@ SDRESULTS SD_Read (SD_DEV *dev, void *dat, uint32_t sector, uint16_t ofs, uint16
     \param sector Sector number to write (internally is converted to byte address).
     \return If all goes well returns SD_OK.
  */
-SDRESULTS SD_Write (SD_DEV *dev, void *dat, uint32_t sector);
+SDRESULTS SD_Write (SD_DEV *dev, void *dat, DWORD sector);
 
 /**
     \brief Allows know status of SD card.

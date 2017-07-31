@@ -139,9 +139,42 @@ int main(void)
     SDRESULTS res;
     if(SD_Init(sdDev)==SD_OK) {
       myprintf(&huart1, "SD card init ok!\r\n");
+    
+      // You can read the sd card. For example you can read from the second
+      // sector the set of bytes between [04..20]:
+      // - Second sector is 1
+      // - Offset is 4
+      // - Bytes to count is 16 (20 minus 4)
+
+      res = SD_Read(sdDev, (void*)sdBuffer, 1, 0, 512);
+      if(res==SD_OK)
+      {
+        myprintf(&huart1, "sd card read success!\r\n");
+        for(int i=0; i<512; i++) {
+          if(i % 8 == 0) {
+            myprintf(&huart1, "\r\n");
+          }
+          myprintf(&huart1, "0x%.2X ", sdBuffer[i]);
+        }
+        myprintf(&huart1, "\r\n");
+
+        // sdBuffer[0] = 0x00;
+        // res = SD_Write(sdDev, (void*)sdBuffer, 1);
+        // if(res==SD_OK)
+        // {
+        //   myprintf(&huart1, "sd card write success!\r\n");
+        // } else {
+        //   myprintf(&huart1, "sd card write failed!\r\n");
+        // }
+      } else {
+        myprintf(&huart1, "sd card read failed! :(\r\n");
+      }
+    
     } else {
       myprintf(&huart1, "sd card init not ok :(\r\n");
     }
+
+
 
     //while(1);
   }
