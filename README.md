@@ -11,7 +11,7 @@ The CubeMX project file is `nucleo-sdcard.ioc` in the root directory. You can lo
 
 ### Usage instructions
 
-#### 1. Programmer
+#### 1. Programmer and gcc
 
 This guide assumes Ubuntu linux.
 
@@ -21,6 +21,10 @@ The guide for doing this is https://github.com/texane/stlink/blob/master/doc/com
 
 Once you have this installed and set up correctly you should be able to run 
 `>st-info --chipid` and get a suitable response back (e.g. 0x0446)
+
+You'll also want to install the excellent arm-none-embedded resource (or else you won't be able to compile things).
+
+The guide for doing this is https://launchpad.net/~team-gcc-arm-embedded/+archive/ubuntu/ppa
 
 #### 2. Development board
 
