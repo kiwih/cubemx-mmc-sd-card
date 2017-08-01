@@ -1,4 +1,4 @@
-#nucleo-sdcard
+# nucleo-sdcard
 
 This project is designed as an example of a STM32CubeMX-generated system with FatFs middleware controlling
 an SPI-connected MMC/SD memory card.
@@ -9,9 +9,9 @@ The driver files `Src/user_diskio_spi.c` and `Inc/user_diskio_spi.h` should be u
 
 The CubeMX project file is `nucleo-sdcard.ioc` in the root directory. You can load this with CubeMX and change any of the settings and regenerate without affecting any of the code in this code base.
 
-###Usage instructions
+### Usage instructions
 
-####Programmer
+#### Programmer
 
 This guide assumes Ubuntu linux.
 
@@ -22,7 +22,7 @@ The guide for doing this is https://github.com/texane/stlink/blob/master/doc/com
 Once you have this installed and set up correctly you should be able to run 
 `>st-info --chipid` and get a suitable response back (e.g. 0x0446)
 
-####Development board
+#### Development board
 
 I used the stm32nucleo-f303re development board for this project, but any suitable board should do. 
 
@@ -32,11 +32,11 @@ If this isn't SPI1 on your board you'll need to change the two files mentioned p
 
 Then, connect a UART TX from the board to a UART RX on your computer. I used UART1.
 
-####MMC/SD memory card
+#### MMC/SD memory card
 
 Make sure your memory card is formatted to some flavour of FAT (I used FAT32) and is empty except for a single text file "test.txt". I put "hello world" inside my file.
 
-####Download and Run
+#### Download and Run
 
 Firstly, you'll want to set up your UART RX. I use `minicom` in a separate terminal to my st-link. You should set it up with baud rate 38400 and hardware flow control off.
 
