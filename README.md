@@ -1,4 +1,4 @@
-# nucleo-sdcard
+# cubemx-mmc-sd-card
 
 This project is designed as an example of a STM32CubeMX-generated system with FatFs middleware controlling
 an SPI-connected MMC/SD memory card.
