@@ -95,8 +95,6 @@ int main(void)
   FATFS FatFs;
   //File object
   FIL fil;
-  //Free and total space
-  uint32_t sdTotalSpace, sdFreeSpace;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -123,8 +121,7 @@ int main(void)
   MX_FATFS_Init();
 
   /* USER CODE BEGIN 2 */
-  int tickCount = 0;
-  myprintf("Mary had a little lamb --\r\nI ate it with mint sauce.\r\n\r\n", tickCount);
+  myprintf("\r\n\r\n(Powering up)\r\nMary had a little lamb --\r\nI ate it with mint sauce.\r\n\r\n");
   HAL_Delay(1000);
   FRESULT fres;
   /* USER CODE END 2 */
@@ -137,12 +134,8 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
     
-    //HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-    myprintf("Tick %i!\r\n", tickCount);
-    tickCount++;
-
     //Mount drive
-    fres = f_mount(&FatFs, "", 1);
+    fres = f_mount(&FatFs, "", 1); //1=mount now
     if (fres != FR_OK) {
       myprintf("f_mount error (%i)\r\n", fres);
       while(1);
@@ -150,14 +143,16 @@ int main(void)
 
     DWORD free_clusters, free_sectors, total_sectors;
 
-    fres = f_getfree("", &free_clusters, &FatFs);
+    FATFS* getFreeFs;
+
+    fres = f_getfree("", &free_clusters, &getFreeFs);
     if (fres != FR_OK) {
       myprintf("f_getfree error (%i)\r\n", fres);
       while(1);
     }
  
-    total_sectors = (FatFs.n_fatent - 2) * FatFs.csize;
-    free_sectors = free_clusters * FatFs.csize;
+    total_sectors = (getFreeFs->n_fatent - 2) * getFreeFs->csize;
+    free_sectors = free_clusters * getFreeFs->csize;
 
     myprintf("SD card stats:\r\n%10lu KiB total drive space.\r\n%10lu KiB available.\r\n", total_sectors / 2, free_sectors / 2);
         
@@ -170,14 +165,14 @@ int main(void)
     myprintf("I was able to open 'test.txt' for reading!\r\n");
 
     BYTE readBuf[30];
-    UINT bytesRead; 
-
-    fres = f_read(&fil, readBuf, 30, &bytesRead);
-    if(fres == FR_OK) {
-      readBuf[bytesRead] = '\0'; //f_read doesn't necessarily append the EOF/null char
-      myprintf("Read %i bytes from 'test.txt' contents: %s\r\n", bytesRead, readBuf);
+    
+    //We can either use f_read OR f_gets to get data out of files
+    //f_gets is a wrapper on f_read that does some string formatting for us
+    TCHAR* rres = f_gets((TCHAR*)readBuf, 30, &fil);
+    if(rres != 0) {
+      myprintf("Read string from 'test.txt' contents: %s\r\n", readBuf);
     } else {
-      myprintf("f_read error (%i)\r\n", fres);
+      myprintf("f_gets error (%i)\r\n", fres);
     }
     
     //Close file, don't forget this!
@@ -190,28 +185,20 @@ int main(void)
       myprintf("f_open error (%i)\r\n", fres);
     }
 
-    strncpy(readBuf, "a new file is made!", 19);
-
-    fres = f_write(&fil, readBuf, 19, &bytesRead);
+    strncpy((char*)readBuf, "a new file is made!", 19);
+    UINT bytesWrote; 
+    fres = f_write(&fil, readBuf, 19, &bytesWrote);
     if(fres == FR_OK) {
-      myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesRead);
+      myprintf("Wrote %i bytes to 'write.txt'!\r\n", bytesWrote);
     } else {
       myprintf("f_write error (%i)\r\n");
     }
 
     //Close file, don't forget this!
     f_close(&fil);
-    
-    // //If we put more than 0 characters (everything OK)
-    // if (f_puts("First string in my file\n", &fil) > 0) {
-        
-        
-    //     //Turn on both leds
-    //     TM_DISCO_LedOn(LED_GREEN | LED_RED);
-    // }
-    
-    //Close file, don't forget this!
-    f_close(&fil);
+
+    //De-mount drive
+    f_mount(NULL, "", 0);
     
     while(1);
   }

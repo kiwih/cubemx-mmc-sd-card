@@ -1,17 +1,19 @@
-
-/*------------------------------------------------------------------------*/
-/* STM32F303: MMCv3/SDv1/SDv2 (SPI mode) control module                   */
-/*------------------------------------------------------------------------*/
-/*
-/  Portions copyright (C) 2014, ChaN, all rights reserved.
-/  Portions copyright (C) 2017, kiwih, all rights reserved.
-/
-/ * This software is a free software and there is NO WARRANTY.
-/ * No restriction on use. You can use, modify and redistribute it for
-/   personal, non-profit or commercial products UNDER YOUR RESPONSIBILITY.
-/ * Redistributions of source code must retain the above copyright notice.
-/
-/-------------------------------------------------------------------------*/
+/**
+ ******************************************************************************
+  * @file    user_diskio_spi.c
+  * @brief   This file contains the implementation of the user_diskio_spi FatFs  
+  *          driver.
+  ******************************************************************************
+  * Portions copyright (C) 2014, ChaN, all rights reserved.
+  * Portions copyright (C) 2017, kiwih, all rights reserved.
+  *
+  * This software is a free software and there is NO WARRANTY.
+  * No restriction on use. You can use, modify and redistribute it for
+  * personal, non-profit or commercial products UNDER YOUR RESPONSIBILITY.
+  * Redistributions of source code must retain the above copyright notice.
+  *
+  ******************************************************************************
+  */
 
 //This code was ported by kiwih from a copywrited (C) library written by ChaN
 //available at http://elm-chan.org/fsw/ff/ffsample.zip 
@@ -19,6 +21,8 @@
 
 //This file provides the FatFs driver functions and SPI code required to manage
 //an SPI-connected MMC or compatible SD card with FAT
+
+//It is designed to be wrapped by a cubemx generated user_diskio.c file.
 
 #include "stm32f3xx_hal.h" /* Provide the low-level HAL functions */
 #include "user_diskio_spi.h"
