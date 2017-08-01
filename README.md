@@ -26,6 +26,10 @@ You'll also want to install the excellent arm-none-embedded resource (or else yo
 
 The guide for doing this is https://launchpad.net/~team-gcc-arm-embedded/+archive/ubuntu/ppa
 
+You'll also want CubeMX (or else why are you here?).
+
+The guide for doing this is http://www.st.com/en/development-tools/stm32cubemx.html (An Ubuntu option is available).
+
 #### 2. Development board
 
 I used the stm32nucleo-f303re development board for this project, but any suitable board should do. 
