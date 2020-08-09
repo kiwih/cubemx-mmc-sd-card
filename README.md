@@ -1,5 +1,7 @@
 # cubemx-mmc-sd-card
 
+*2020 Update: A newer version of this project now exists at https://github.com/kiwih/cubeide-sd-card - the newer version uses CubeIDE instead of CubeMX, and has a detailed accompanying blog post explaining how to integrate the driver.*
+
 This project is designed as an example of a STM32CubeMX-generated system with FatFs middleware controlling
 an SPI-connected MMC/SD memory card.
 
